@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daily Tasks</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      color: #192333;
+      background: #f3f5f8;
+      line-height: 1.6;
+    }
+    main {
+      width: min(760px, 92%);
+      margin: 50px auto;
+    }
+    header { margin-bottom: 28px; }
+    h1 { margin-bottom: 4px; font-size: 36px; }
+    h2 { margin-top: 0; }
+    header p, .muted { color: #556175; }
+    .card {
+      background: white;
+      padding: 28px;
+      border: 1px solid #dce1e8;
+      border-radius: 14px;
+      margin-bottom: 24px;
+    }
+    label { display: block; font-weight: bold; margin-bottom: 8px; }
+    .entry { display: flex; gap: 10px; }
+    input[type="text"] {
+      flex: 1;
+      min-width: 0;
+      padding: 13px;
+      border: 1px solid #9aa5b5;
+      border-radius: 7px;
+      font: inherit;
+    }
+    button {
+      padding: 11px 16px;
+      border: 1px solid #c5cdd8;
+      border-radius: 7px;
+      background: white;
+      color: #192333;
+      font: inherit;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    button:hover { background: #edf1f7; }
+    button:focus-visible, input:focus-visible {
+      outline: 3px solid #769bff;
+      outline-offset: 3px;
+    }
+    .primary { background: #2854c5; color: white; border-color: #2854c5; }
+    .primary:hover { background: #1e429f; }
+    .error { color: #b42318; margin: 8px 0 0; }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 24px 0 16px;
+    }
+    .selected { background: #192333; color: white; }
+    .selected:hover { background: #304158; }
+    ul { list-style: none; padding: 0; }
+    li {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #e5e9ef;
+    }
+    li label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      font-weight: normal;
+      margin: 0;
+      cursor: pointer;
+    }
+    li span { overflow-wrap: anywhere; }
+    input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; }
+    .done { text-decoration: line-through; color: #657186; }
+    .delete { color: #b42318; }
+    .bottom {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-top: 24px;
+    }
+    #status { min-height: 26px; color: #36537e; }
+    .help { margin-top: 65px; }
+    .help article { padding: 22px 0; border-bottom: 1px solid #e5e9ef; }
+    .help h3 { margin: 0 0 8px; }
+    .help p { margin: 0; }
+    footer { padding: 32px 0; color: #657186; text-align: center; }
+    @media (max-width: 520px) {
+      main { margin-top: 24px; }
+      .card { padding: 20px; }
+      .entry { flex-direction: column; }
+      h1 { font-size: 30px; }
+    }
+  </style>
+  <!-- CLARITY TRACKING CODE HERE -->
+</head>
+<body>
+  <main>
+    <header>
+      <p>KEEP YOUR DAY SIMPLE</p>
+      <h1>Daily Tasks</h1>
+      <p>Add a task, finish it, and make room for what comes next.</p>
+    </header>
+
+    <section class="card" aria-labelledby="tasks-heading">
+      <h2 id="tasks-heading">Your task list</h2>
+      <form id="task-form" novalidate>
+        <label for="task-input">New task</label>
+        <div class="entry">
+          <input id="task-input" type="text" maxlength="120"
+                 placeholder="e.g., Review class notes"
+                 aria-describedby="task-error" autocomplete="off">
+          <button class="primary" type="submit">Add task</button>
+        </div>
+        <p id="task-error" class="error" role="alert" hidden></p>
+      </form>
+
+      <div class="toolbar" role="group" aria-label="Filter tasks">
+        <button type="button" data-filter="all"
+                class="selected" aria-pressed="true">All</button>
+        <button type="button" data-filter="active"
+                aria-pressed="false">Active</button>
+        <button type="button" data-filter="completed"
+                aria-pressed="false">Completed</button>
+      </div>
+
+      <p id="summary" class="muted"></p>
+      <ul id="task-list" aria-label="Tasks"></ul>
+      <p id="empty" class="muted">No tasks yet. Add your first task above.</p>
+
+      <div class="bottom">
+        <button id="clear-completed" type="button">Clear completed</button>
+        <!-- Deliberate usability flaw: no action is attached. -->
+        <button id="export-tasks" type="button">Export tasks</button>
+      </div>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card help" aria-labelledby="help-heading">
+      <h2 id="help-heading">Help and frequently asked questions</h2>
+
+      <article>
+        <h3>How do I add a task?</h3>
+        <p>Type a short description in the New task field, then select
+          Add task or press Enter. Try a specific action such as
+          “Read chapter three” or “Submit the lab report.”</p>
+      </article>
+
+      <article>
+        <h3>How do I mark something complete?</h3>
+        <p>Select the checkbox next to a task. Completed tasks appear
+          crossed out. Select the checkbox again if you need to reopen
+          a task.</p>
+      </article>
+
+      <article>
+        <h3>What do the filters do?</h3>
+        <p>All shows your entire list. Active shows unfinished tasks.
+          Completed shows tasks you have finished. Switching filters
+          does not delete anything.</p>
+      </article>
+
+      <article>
+        <h3>How do I remove tasks?</h3>
+        <p>Select Delete beside a task to remove it immediately.
+          Clear completed removes all finished tasks, including those
+          hidden by the current filter. These actions cannot be undone.</p>
+      </article>
+
+      <article>
+        <h3>Will my tasks stay after I refresh?</h3>
+        <p>Tasks are saved in this browser when browser storage is
+          available. They are not shared between browsers or devices.
+          Clearing browser data removes saved tasks, and private
+          browsing may discard them when the private session ends.</p>
+      </article>
+
+      <article>
+        <h3>Why was my input rejected?</h3>
+        <p>A task must contain at least one character other than a space.
+          Empty entries display an error below the input field.
+          Descriptions can contain up to 120 characters.</p>
+      </article>
+
+      <article>
+        <h3>Can I use this on my phone?</h3>
+        <p>Yes. The layout adjusts to smaller screens, and you can add,
+          complete, filter, and delete tasks using touch controls.
+          Your phone keeps its own separate task list.</p>
+      </article>
+    </section>
+
+    <footer>Daily Tasks · A usability testing project</footer>
+  </main>
+
+  <script>
+    "use strict";
+
+    const storageKey = "clarity-lab-daily-tasks";
+    const form = document.getElementById("task-form");
+    const input = document.getElementById("task-input");
+    const error = document.getElementById("task-error");
+    const list = document.getElementById("task-list");
+    const empty = document.getElementById("empty");
+    const summary = document.getElementById("summary");
+    const status = document.getElementById("status");
+    const filterButtons = document.querySelectorAll("[data-filter]");
+
+    let tasks = [];
+    let filter = "all";
+
+    try {
+      const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      if (Array.isArray(saved)) {
+        tasks = saved.filter(task =>
+          task &&
+          typeof task.id === "string" &&
+          typeof task.text === "string" &&
+          typeof task.done === "boolean"
+        );
+      }
+    } catch {
+      status.textContent = "Saved tasks could not be loaded.";
+    }
+
+    function save(message) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(tasks));
+        status.textContent = message;
+      } catch {
+        status.textContent =
+          message + " Browser storage is unavailable; changes may be lost when you leave.";
+      }
+      render();
+    }
+
+    function render() {
+      list.replaceChildren();
+
+      const completed = tasks.filter(task => task.done).length;
+      summary.textContent =
+        `${tasks.length} total · ${tasks.length - completed} active · ${completed} completed`;
+
+      const visible = tasks.filter(task =>
+        filter === "all" ||
+        (filter === "active" && !task.done) ||
+        (filter === "completed" && task.done)
+      );
+
+      empty.hidden = visible.length > 0;
+      empty.textContent = tasks.length === 0
+        ? "No tasks yet. Add your first task above."
+        : "No tasks match this filter.";
+
+      visible.forEach(task => {
+        const item = document.createElement("li");
+        const label = document.createElement("label");
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = task.done;
+
+        const text = document.createElement("span");
+        text.textContent = task.text;
+        if (task.done) text.classList.add("done");
+
+        checkbox.addEventListener("change", () => {
+          task.done = checkbox.checked;
+          save(task.done ? "Task completed." : "Task reopened.");
+        });
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "delete";
+        remove.textContent = "Delete";
+        remove.setAttribute("aria-label", `Delete task: ${task.text}`);
+        remove.addEventListener("click", () => {
+          tasks = tasks.filter(existing => existing.id !== task.id);
+          save("Task deleted.");
+        });
+
+        label.append(checkbox, text);
+        item.append(label, remove);
+        list.append(item);
+      });
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      const text = input.value.trim();
+
+      if (!text) {
+        error.textContent = "Please enter a task before adding it.";
+        error.hidden = false;
+        input.setAttribute("aria-invalid", "true");
+        input.focus();
+        return;
+      }
+
+      error.hidden = true;
+      input.removeAttribute("aria-invalid");
+      tasks.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+        text,
+        done: false
+      });
+
+      input.value = "";
+      save("Task added.");
+      input.focus();
+    });
+
+    input.addEventListener("input", () => {
+      if (input.value.trim()) {
+        error.hidden = true;
+        input.removeAttribute("aria-invalid");
+      }
+    });
+
+    filterButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        filter = button.dataset.filter;
+        filterButtons.forEach(other => {
+          const selected = other === button;
+          other.classList.toggle("selected", selected);
+          other.setAttribute("aria-pressed", String(selected));
+        });
+        status.textContent = `Showing ${filter} tasks.`;
+        render();
+      });
+    });
+
+    document.getElementById("clear-completed").addEventListener("click", () => {
+      const count = tasks.filter(task => task.done).length;
+      tasks = tasks.filter(task => !task.done);
+      save(count ? `${count} completed task(s) removed.` : "No completed tasks to clear.");
+    });
+
+    render();
+  </script>
+</body>
+</html>
